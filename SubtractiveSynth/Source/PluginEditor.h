@@ -16,7 +16,7 @@
 //==============================================================================
 /**
 */
-class SubtractiveSynthAudioProcessorEditor  : public AudioProcessorEditor
+class SubtractiveSynthAudioProcessorEditor  : public AudioProcessorEditor, private Slider::Listener
 {
 public:
     SubtractiveSynthAudioProcessorEditor (SubtractiveSynthAudioProcessor&);
@@ -30,6 +30,13 @@ private:
     // This reference is provided as a quick way for your editor to
     // access the processor object that created it.
     SubtractiveSynthAudioProcessor& processor;
+
+    Slider waveform;
+    Label waveformLabel;
+    Slider filter;
+    Label filterLabel;
+
+    void sliderValueChanged(Slider* slider) override;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (SubtractiveSynthAudioProcessorEditor)
 };
