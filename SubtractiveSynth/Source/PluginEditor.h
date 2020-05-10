@@ -33,8 +33,13 @@ private:
 
     Slider waveform;
     Label waveformLabel;
-    Slider filter;
-    Label filterLabel;
+    Slider amplitude;
+    Label amplitudeLabel;
+
+    Slider filterKnob1;
+    Slider filterKnob2;
+    Slider filterKnob3;
+    Slider filterKnob4;
 
     void sliderValueChanged(Slider* slider) override;
 
