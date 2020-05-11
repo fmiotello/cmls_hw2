@@ -14,14 +14,14 @@
 //==============================================================================
 SubtractiveSynthAudioProcessor::SubtractiveSynthAudioProcessor()
 #ifndef JucePlugin_PreferredChannelConfigurations
-     : AudioProcessor (BusesProperties()
-                     #if ! JucePlugin_IsMidiEffect
-                      #if ! JucePlugin_IsSynth
-                       .withInput  ("Input",  AudioChannelSet::stereo(), true)
-                      #endif
-                       .withOutput ("Output", AudioChannelSet::stereo(), true)
-                     #endif
-                       )
+    : AudioProcessor(BusesProperties()
+#if ! JucePlugin_IsMidiEffect
+#if ! JucePlugin_IsSynth
+        .withInput("Input", AudioChannelSet::stereo(), true)
+#endif
+        .withOutput("Output", AudioChannelSet::stereo(), true)
+#endif
+    ), lowPassFilter(dsp::IIR::Coefficients<float>::makeLowPass(SAMPLE_RATE, 10.0f, 0.1f))
 #endif
 {
 }
@@ -95,8 +95,24 @@ void SubtractiveSynthAudioProcessor::changeProgramName (int index, const String&
 //==============================================================================
 void SubtractiveSynthAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 {
-    // Use this method as the place to do any pre-playback
-    // initialisation that you need..
+    oscillatorFreq = 440.0f;   //set some default value
+    cutOffFreq = 0.1f;
+    resonance = 0.1f;
+    waveFormNum = 0;
+    oscillatorGain.setGainDecibels(-6.0f);
+
+    dsp::ProcessSpec spec;        //set the ProcessSpec
+    spec.sampleRate = SAMPLE_RATE;
+    spec.maximumBlockSize = samplesPerBlock;
+    spec.numChannels = getTotalNumOutputChannels();
+
+    for (auto&& oscillator : oscArray) {
+        oscillator.setFrequency(oscillatorFreq);
+        oscillator.prepare(spec);
+    }
+
+    lowPassFilter.prepare(spec);
+    lowPassFilter.reset();
 }
 
 void SubtractiveSynthAudioProcessor::releaseResources()
@@ -129,33 +145,61 @@ bool SubtractiveSynthAudioProcessor::isBusesLayoutSupported (const BusesLayout& 
 }
 #endif
 
+//====================================================================================
+//setter
+
+void SubtractiveSynthAudioProcessor::setCutOffFreq(float newcutOffFreq) { //newCutOffFreq different from 0
+    if(newcutOffFreq > 0) cutOffFreq = newcutOffFreq;  
+}
+
+void SubtractiveSynthAudioProcessor::setResonance(float newResonance) {  //newResonance different from 0
+    if(resonance > 0) resonance = newResonance;
+}
+
+void SubtractiveSynthAudioProcessor::setWaveFormNum(float newWaveNum) {  //newWaveNum number goes from 1 to 4
+    if(newWaveNum > 0) waveFormNum = newWaveNum-1;
+}
+
+void SubtractiveSynthAudioProcessor::setOscAmplitude(float newAmplitude) {
+    oscillatorGain.setGainLinear(newAmplitude);
+}
+
+//=================================================================================
+
+void SubtractiveSynthAudioProcessor::updateFilter() {
+    *lowPassFilter.state = *dsp::IIR::Coefficients<float>::makeLowPass(SAMPLE_RATE, cutOffFreq, resonance);
+    //*lowPassFilter.state = *dsp::FilterDesign<float>::designIIRHighpassHighOrderButterworthMethod(cutOffFreq, SAMPLE_RATE, 4)[0];
+}
+
 void SubtractiveSynthAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiBuffer& midiMessages)
 {
-    ScopedNoDenormals noDenormals;
-    auto totalNumInputChannels  = getTotalNumInputChannels();
+    auto totalNumInputChannels = getTotalNumInputChannels();
     auto totalNumOutputChannels = getTotalNumOutputChannels();
+    int time;
+    MidiMessage m;
+    int numSamples = buffer.getNumSamples();
+    AudioBuffer<float> tempBuffer;
 
-    // In case we have more outputs than inputs, this code clears any output
-    // channels that didn't contain input data, (because these aren't
-    // guaranteed to be empty - they may contain garbage).
-    // This is here to avoid people getting screaming feedback
-    // when they first compile a plugin, but obviously you don't need to keep
-    // this code if your algorithm always overwrites all the output channels.
+    tempBuffer.setSize(totalNumOutputChannels, numSamples);
+    tempBuffer.clear();
+
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
-        buffer.clear (i, 0, buffer.getNumSamples());
+        buffer.clear(i, 0, buffer.getNumSamples());
 
-    // This is the place where you'd normally do the guts of your plugin's
-    // audio processing...
-    // Make sure to reset the state if your inner loop is processing
-    // the samples and the outer loop is handling the channels.
-    // Alternatively, you can process the samples with the channels
-    // interleaved by keeping the same state.
-    for (int channel = 0; channel < totalNumInputChannels; ++channel)
-    {
-        auto* channelData = buffer.getWritePointer (channel);
+    dsp::AudioBlock<float> currentBlock(tempBuffer);
+    oscArray[waveFormNum].process(dsp::ProcessContextReplacing <float>(currentBlock));    //oscillator.process put in the current block the value of the wave
+    oscillatorGain.process(dsp::ProcessContextReplacing <float>(currentBlock));     //apply che gain to the current block
 
-        // ..do something to the data...
-    }
+    updateFilter(); //update the filter parameter
+    lowPassFilter.process(dsp::ProcessContextReplacing <float>(currentBlock));  //filtering the current block
+    currentBlock.copyTo(buffer); //copy the block after all the processing to the output buffer
+    
+    for (MidiBuffer::Iterator i(midiMessages); i.getNextEvent(m, time);)       //listening for midi event and change the freq of the oscillator
+        if (m.isNoteOn()) {
+            oscillatorFreq = MidiMessage::getMidiNoteInHertz(m.getNoteNumber()); //frequency in hertz
+            for (auto&& oscillator : oscArray)
+                oscillator.setFrequency(oscillatorFreq);
+        } 
 }
 
 //==============================================================================
@@ -166,7 +210,7 @@ bool SubtractiveSynthAudioProcessor::hasEditor() const
 
 AudioProcessorEditor* SubtractiveSynthAudioProcessor::createEditor()
 {
-    return new SubtractiveSynthAudioProcessorEditor (*this);
+    return new SubtractiveSynthAudioProcessorEditor(*this);
 }
 
 //==============================================================================
