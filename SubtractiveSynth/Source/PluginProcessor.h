@@ -12,10 +12,9 @@
 
 #include <JuceHeader.h>
 #include<juce_dsp/juce_dsp.h>
+#include "SynthVoice.h"
 
-#define NUM_SECONDS (100)
 #define SAMPLE_RATE (44100)
-#define FRAMES_PER_BUFFER (256) // 64
 #ifndef M_PI
 #define M_PI (3.14159265)
 #endif
@@ -62,6 +61,9 @@ public:
     //==============================================================================
     void getStateInformation (MemoryBlock& destData) override;
     void setStateInformation (const void* data, int sizeInBytes) override;
+
+    //setter
+
     void setCutOffFreq(float newcutOffFreq);
     void setResonance(float newResonance);
     void setWaveFormNum(float newWaveNum);
@@ -69,31 +71,19 @@ public:
 
 private:
 
-    dsp::Gain<float> oscillatorGain;
+    Synthesiser synth;  
+
+    dsp::Gain<float> amplitude;    // amplitude of the oscillator
     float oscillatorFreq;   //freq of the oscillator
     float cutOffFreq;  //cut off freq of the filter
     float resonance;   // resonance of the filter
     int waveFormNum;   // number of the waveForm of the oscillator (from 0 to 3)
 
     dsp::ProcessorDuplicator<dsp::IIR::Filter <float>, dsp::IIR::Coefficients <float>> lowPassFilter;   // filter
-    dsp::Oscillator<float> oscArray[4] =     //array of Oscillator, each element is an oscillator with a specific waveform
-    {
-        // No Approximation
-        {[](float x) { return std::sin(x); }},                   // sine
-        {[](float x) { return x / MathConstants<float>::pi; }},   // saw
-        {[](float x) { return x < 0.0f ? -1.0f : 1.0f; }},        // square
 
-        {[](float x) { return x < MathConstants<double>::pi ? -1.0 + (2.0 / MathConstants<double>::pi) * x
-                                                            : 3.0 - (2.0 / MathConstants<double>::pi) * x; }}, // triang
-
-
-        //// Approximated by a wave-table
-        //{[](float x) { return std::sin(x); }, 100},                 // sine
-        //{[](float x) { return x / MathConstants<float>::pi; }, 100}, // saw
-        //{[](float x) { return x < 0.0f ? -1.0f : 1.0f; }, 100}       // square
-    };
-
-    void updateFilter();
+    void updateFilter(); //use to apdate the parameters of the filter
+    void addVoiceSynth(SynthesiserVoice* const newVoice);  // add a single voice to the synth, newVoice can be of classes: SineVoice, SquareVoice, TriangleVoice, SawVoice
+    void addSoundSynth(); //add the 4 different sound to the synth, used only at the start
 
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(SubtractiveSynthAudioProcessor)
