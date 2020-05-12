@@ -36,10 +36,15 @@ private:
     Slider amplitude;
     Label amplitudeLabel;
 
-    Slider filterKnob1;
-    Slider filterKnob2;
-    Slider filterKnob3;
-    Slider filterKnob4;
+    Slider cutOffFreq;
+    Label cutOffFreqLabel;
+    Slider resonance;
+    Label resonanceLabel;
+    Slider poleNumber;
+    Label poleNumberLabel;
+
+    Label labelMainPart;
+    Label labelFilterPart;
 
     void sliderValueChanged(Slider* slider) override;
 

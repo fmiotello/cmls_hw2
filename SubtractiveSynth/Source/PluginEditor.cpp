@@ -16,19 +16,21 @@ SubtractiveSynthAudioProcessorEditor::SubtractiveSynthAudioProcessorEditor (Subt
     : AudioProcessorEditor (&p), processor (p)
 {
 
-    setSize (500, 350);
+    setSize (500, 450);
 
     waveformLabel.setText("Waveform :", dontSendNotification);
     amplitudeLabel.setText("Amplitude :", dontSendNotification);
 
-    waveform.setRange(1, 5, 1);
+    waveform.setRange(1, 4, 1);
     waveform.setSliderStyle(Slider::Rotary);
     waveform.setTextBoxStyle(Slider::TextBoxBelow, false, 100, 20);
     waveform.addListener(this);
+    waveform.setValue(2);
     amplitude.setRange(0, 1, 0.05);
     amplitude.setSliderStyle(Slider::Rotary);
     amplitude.setTextBoxStyle(Slider::TextBoxBelow, false, 100, 20);
     amplitude.addListener(this);
+    amplitude.setValue(0.7);
 
     addAndMakeVisible(waveform);
     addAndMakeVisible(waveformLabel);
@@ -36,26 +38,45 @@ SubtractiveSynthAudioProcessorEditor::SubtractiveSynthAudioProcessorEditor (Subt
     addAndMakeVisible(amplitudeLabel);
 
 
-    filterKnob1.setRange(0, 10, 1);
-    filterKnob1.setSliderStyle(Slider::Rotary);
-    filterKnob1.setTextBoxStyle(Slider::TextBoxBelow, false, 80, 20);
-    filterKnob1.addListener(this);
-    addAndMakeVisible(filterKnob1);
-    filterKnob2.setRange(0, 10, 1);
-    filterKnob2.setSliderStyle(Slider::Rotary);
-    filterKnob2.setTextBoxStyle(Slider::TextBoxBelow, false, 80, 20);
-    filterKnob2.addListener(this);
-    addAndMakeVisible(filterKnob2);
-    filterKnob3.setRange(0, 10, 1);
-    filterKnob3.setSliderStyle(Slider::Rotary);
-    filterKnob3.setTextBoxStyle(Slider::TextBoxBelow, false, 80, 20);
-    filterKnob3.addListener(this);
-    addAndMakeVisible(filterKnob3);
-    filterKnob4.setRange(0, 10, 1);
-    filterKnob4.setSliderStyle(Slider::Rotary);
-    filterKnob4.setTextBoxStyle(Slider::TextBoxBelow, false, 80, 20);
-    filterKnob4.addListener(this);
-    addAndMakeVisible(filterKnob4);
+    cutOffFreqLabel.setText("Cut-off freq :", dontSendNotification);
+    resonanceLabel.setText("Resonance :", dontSendNotification);
+    poleNumberLabel.setText("Number of poles :", dontSendNotification);
+
+    cutOffFreq.setRange(1000, 10000, 1);    //maybe we will use setNormalisableRange (NormalisableRange< double > newNormalisableRange) to use a logarithmic scale.
+    cutOffFreq.setSliderStyle(Slider::Rotary);
+    cutOffFreq.setTextBoxStyle(Slider::TextBoxBelow, false, 80, 20);
+    cutOffFreq.addListener(this);
+    addAndMakeVisible(cutOffFreq);
+    cutOffFreq.setValue(2000);
+    cutOffFreq.setTextValueSuffix("Hz");
+
+    resonance.setRange(1, 30, 1);
+    resonance.setSliderStyle(Slider::Rotary);
+    resonance.setTextBoxStyle(Slider::TextBoxBelow, false, 80, 20);
+    resonance.addListener(this);
+    addAndMakeVisible(resonance);
+    resonance.setValue(10);
+
+    poleNumber.setRange(1, 4, 1);
+    poleNumber.setSliderStyle(Slider::Rotary);
+    poleNumber.setTextBoxStyle(Slider::TextBoxBelow, false, 80, 20);
+    poleNumber.addListener(this);
+    addAndMakeVisible(poleNumber);
+    poleNumber.setValue(2);
+
+    addAndMakeVisible(cutOffFreq);
+    addAndMakeVisible(cutOffFreqLabel);
+    addAndMakeVisible(resonance);
+    addAndMakeVisible(resonanceLabel);
+    addAndMakeVisible(poleNumber);
+    addAndMakeVisible(poleNumberLabel);
+
+
+
+    labelMainPart.setText("main :", dontSendNotification);
+    addAndMakeVisible(labelMainPart);
+    labelFilterPart.setText("filter :", dontSendNotification);
+    addAndMakeVisible(labelFilterPart);
 }
 
 SubtractiveSynthAudioProcessorEditor::~SubtractiveSynthAudioProcessorEditor()
@@ -90,28 +111,45 @@ void SubtractiveSynthAudioProcessorEditor::resized()
     generalFlexBox.alignContent = FlexBox::AlignContent::center;
 
     secondaryFlex1.flexDirection = FlexBox::Direction::column;
-    secondaryFlex1.flexWrap = FlexBox::Wrap::wrap;
     secondaryFlex1.justifyContent = FlexBox::JustifyContent::spaceAround;
     secondaryFlex1.alignContent = FlexBox::AlignContent::center;
     secondaryFlex2.flexDirection = FlexBox::Direction::column;
-    secondaryFlex2.flexWrap = FlexBox::Wrap::wrap;
     secondaryFlex2.justifyContent = FlexBox::JustifyContent::spaceAround;
     secondaryFlex2.alignContent = FlexBox::AlignContent::center;
 
     secondaryFlex1.items = {FlexItem(100, 50, waveformLabel), FlexItem(100, 100, waveform)};
     secondaryFlex2.items = {FlexItem(100, 50, amplitudeLabel), FlexItem(100, 100, amplitude)};
 
-
     generalFlexBox.items = { FlexItem(150,150,secondaryFlex1), FlexItem(150,150,secondaryFlex2)};
 
 
 
     FlexBox filterFlexBox;
+    FlexBox secondaryFlex3;
+    FlexBox secondaryFlex4;
+    FlexBox secondaryFlex5;
+
+
     filterFlexBox.flexDirection = FlexBox::Direction::row;
     filterFlexBox.flexWrap = FlexBox::Wrap::wrap;
     filterFlexBox.justifyContent = FlexBox::JustifyContent::spaceAround;
     filterFlexBox.alignContent = FlexBox::AlignContent::center;
-    filterFlexBox.items = { FlexItem(100,100,filterKnob1), FlexItem(100,100,filterKnob2), FlexItem(100,100,filterKnob3), FlexItem(100,100,filterKnob4) };
+
+    secondaryFlex3.flexDirection = FlexBox::Direction::column;
+    secondaryFlex3.justifyContent = FlexBox::JustifyContent::spaceAround;
+    secondaryFlex3.alignContent = FlexBox::AlignContent::center;
+    secondaryFlex4.flexDirection = FlexBox::Direction::column;
+    secondaryFlex4.justifyContent = FlexBox::JustifyContent::spaceAround;
+    secondaryFlex4.alignContent = FlexBox::AlignContent::center;
+    secondaryFlex5.flexDirection = FlexBox::Direction::column;
+    secondaryFlex5.justifyContent = FlexBox::JustifyContent::spaceAround;
+    secondaryFlex5.alignContent = FlexBox::AlignContent::center;
+
+    secondaryFlex3.items = { FlexItem(100, 50, cutOffFreqLabel), FlexItem(100, 100, cutOffFreq) };
+    secondaryFlex4.items = { FlexItem(100, 50, resonanceLabel), FlexItem(100, 100, resonance) };
+    secondaryFlex5.items = { FlexItem(100, 50, poleNumberLabel), FlexItem(100, 100, poleNumber) };
+
+    filterFlexBox.items = { FlexItem(100,150,secondaryFlex3), FlexItem(100,150,secondaryFlex4), FlexItem(100,150,secondaryFlex5)};
 
 
     FlexBox mainFlexBox;
@@ -120,7 +158,7 @@ void SubtractiveSynthAudioProcessorEditor::resized()
     mainFlexBox.justifyContent = FlexBox::JustifyContent::spaceAround;
     mainFlexBox.alignContent = FlexBox::AlignContent::center;
 
-    mainFlexBox.items = { FlexItem(400,150,generalFlexBox), FlexItem(400,150,filterFlexBox) };
+    mainFlexBox.items = { FlexItem(100,50,labelMainPart), FlexItem(400,150,generalFlexBox), FlexItem(100,50,labelFilterPart), FlexItem(400,150,filterFlexBox) };
 
 
     mainFlexBox.performLayout(bounds);
@@ -131,9 +169,38 @@ void SubtractiveSynthAudioProcessorEditor::sliderValueChanged(Slider * slider) {
     if (slider == &waveform) {
         //processor.setFreq(freq.getValue());
         DBG("dbg : Waveform Changed");
+        int valueWav = waveform.getValue();
+        if (valueWav == 1) {
+            waveform.setTextValueSuffix(": sine");
+            processor.setWaveFormNum(valueWav);
+        }
+        else if (valueWav == 2) {
+            waveform.setTextValueSuffix(": sawtooth");
+            processor.setWaveFormNum(valueWav);
+        }
+        else if (valueWav == 3) {
+            waveform.setTextValueSuffix(": triangular");
+            processor.setWaveFormNum(valueWav);
+        }
+        else if (valueWav == 4) {
+            waveform.setTextValueSuffix(": square");
+            processor.setWaveFormNum(valueWav);
+        }
     }
     else if (slider == &amplitude) {
         DBG("dbg : Amplitude Changed");
-        //processor.setAmplitude(amplitude.getValue());
+        processor.setOscAmplitude(amplitude.getValue());
+    }
+    else if (slider == &cutOffFreq) {
+        DBG("dbg : Cut-off freq Changed");
+        processor.setCutOffFreq(cutOffFreq.getValue());
+    }
+    else if (slider == &resonance) {
+        DBG("dbg : Resonance Changed");
+        processor.setResonance(resonance.getValue());
+    }
+    else if (slider == &poleNumber) {
+        DBG("dbg : Pole number Changed");
+        //processor.setPoleNumber(poleNumber.getValue());
     }
 }
