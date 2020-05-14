@@ -68,6 +68,7 @@ public:
     void setResonance(float newResonance);
     void setWaveFormNum(float newWaveNum);
     void setOscAmplitude(float newAmplitude);
+    void setPoleNumber(int order);
 
 private:
 
@@ -82,7 +83,7 @@ private:
     dsp::ProcessorDuplicator<dsp::IIR::Filter <float>, dsp::IIR::Coefficients <float>> lowPassFilter;   // filter
 
     void updateFilter(); //use to apdate the parameters of the filter
-    void addVoiceSynth(SynthesiserVoice* const newVoice);  // add a single voice to the synth, newVoice can be of classes: SineVoice, SquareVoice, TriangleVoice, SawVoice
+    void addVoiceSynth(int newWaveNum);  // add a single voice to the synth
     void addSoundSynth(); //add the 4 different sound to the synth, used only at the start
 
     //==============================================================================

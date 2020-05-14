@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <JUCERPROJECT id="Cec1Iv" name="SubtractiveSynth" projectType="audioplug" jucerVersion="5.4.7"
-              pluginCharacteristicsValue="pluginIsSynth,pluginProducesMidiOut,pluginWantsMidiIn"
+              pluginCharacteristicsValue="pluginIsSynth,pluginWantsMidiIn"
               compilerFlagSchemes="NewScheme">
   <MAINGROUP id="Kjat8S" name="SubtractiveSynth">
     <GROUP id="{9F2179F9-52E7-BAF5-86CF-75349D65B66F}" name="Source">
+      <FILE id="NyGGnH" name="SynthVoice.cpp" compile="1" resource="0" file="Source/SynthVoice.cpp"/>
       <FILE id="oRXKdX" name="PluginProcessor.cpp" compile="1" resource="0"
             file="Source/PluginProcessor.cpp"/>
       <FILE id="PBbgFZ" name="PluginProcessor.h" compile="0" resource="0"

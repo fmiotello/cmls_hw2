@@ -87,14 +87,36 @@ public:
         return output;
     }
 
+    static OscillatorBase* makeProduct(int waveNum) {
+        OscillatorBase* proto;
+
+        if (voiceMap.contains(waveNum)) {
+            proto = voiceMap[waveNum];
+        }
+        
+        return proto->clone();
+    }
+
+    static void addPrototype(int waveNum, OscillatorBase* p) {
+        voiceMap.set(waveNum, p);
+    }
+
+    static int getNumProto() {
+        return (int)voiceMap.size();
+    }
+
+
     /** Subclasses should override this to say whether they can play the given sound */
     bool canPlaySound(SynthesiserSound*) override = 0;
 
     /** Subclasses should override this to render a waveshape */
     virtual double renderWaveShape(const double currentPhase) = 0;
 
+    virtual OscillatorBase* clone() const = 0;
+
 private:
     SmoothedValue<double> amplitude, phaseIncrement;
+    static HashMap<int, OscillatorBase*> voiceMap;
 
     double frequency = 0.0;
     double phasePos = 0.0;
@@ -107,16 +129,18 @@ private:
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(OscillatorBase)
 };
 
-
 //we have 4 children: Sine , saw , triang and square. Each one of these defines the two methods in the proper way
 
 struct SineVoice : public OscillatorBase
 {
+
     SineVoice() {}
 
     bool canPlaySound(SynthesiserSound* sound) override { return dynamic_cast<SineSound*> (sound) != nullptr; }  //use to play with this voice only if we are using the sine sound
 
     double renderWaveShape(const double currentPhase) override { return sin(currentPhase); }
+
+    OscillatorBase* clone() const { return new SineVoice(); }
 
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(SineVoice)
@@ -130,6 +154,7 @@ struct SquareVoice : public OscillatorBase
 
     double renderWaveShape(const double currentPhase) override { return (currentPhase < MathConstants<double>::pi ? 0.0 : 1.0); }
 
+    OscillatorBase* clone() const { return new SquareVoice(); }
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(SquareVoice)
 };
@@ -142,6 +167,7 @@ struct SawVoice : public OscillatorBase
 
     double renderWaveShape(const double currentPhase) override { return (1.0 / MathConstants<double>::pi) * currentPhase - 1.0; }
 
+    OscillatorBase* clone() const { return new SawVoice(); }
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(SawVoice)
 };
@@ -157,6 +183,8 @@ struct TriangleVoice : public OscillatorBase
         return currentPhase < MathConstants<double>::pi ? -1.0 + (2.0 / MathConstants<double>::pi) * currentPhase
             : 3.0 - (2.0 / MathConstants<double>::pi) * currentPhase;
     }
+   
+    OscillatorBase* clone() const { return new TriangleVoice(); }
 
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(TriangleVoice)

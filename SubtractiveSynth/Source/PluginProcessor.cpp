@@ -21,7 +21,7 @@ SubtractiveSynthAudioProcessor::SubtractiveSynthAudioProcessor()
 #endif
         .withOutput("Output", AudioChannelSet::stereo(), true)
 #endif
-    ), lowPassFilter(dsp::IIR::Coefficients<float>::makeLowPass(SAMPLE_RATE, 10.0f, 0.1f))
+    ), lowPassFilter(dsp::IIR::Coefficients<float>::makeLowPass(SAMPLE_RATE, 10.0f, 0.1f)), synth()
 #endif
 {
 }
@@ -98,32 +98,30 @@ void SubtractiveSynthAudioProcessor::prepareToPlay (double sampleRate, int sampl
     oscillatorFreq = 440.0f;   //set some default value
     cutOffFreq = 0.1f;
     resonance = 0.1f;
-    waveFormNum = 1;
-
+    waveFormNum = 2;
 
     dsp::ProcessSpec spec;        //set the ProcessSpec
     spec.sampleRate = SAMPLE_RATE;
     spec.maximumBlockSize = samplesPerBlock;
     spec.numChannels = getTotalNumOutputChannels();
 
-    amplitude.setGainDecibels(-6.0f);
+    amplitude.setGainDecibels(-6.0f);  //set amplitude and prepare filter
     amplitude.prepare(spec);
     lowPassFilter.prepare(spec);
     lowPassFilter.reset();
 
-    synth.setCurrentPlaybackSampleRate(SAMPLE_RATE);
+    OscillatorBase::addPrototype(1, new SineVoice());
+    OscillatorBase::addPrototype(2, new SawVoice());
+    OscillatorBase::addPrototype(3, new TriangleVoice());
+    OscillatorBase::addPrototype(4, new SquareVoice());
+
+    synth.setCurrentPlaybackSampleRate(SAMPLE_RATE);  // set the synth
     addSoundSynth();
-
-    //example - create 5 sine voices at the start
-
-    for (int i = 0; i < 5; ++i) {
-        addVoiceSynth(new SineVoice());
-    }
- 
 }
 
 void SubtractiveSynthAudioProcessor::addSoundSynth() { 
     synth.clearSounds();
+    synth.clearVoices();
 
     //add all the possible sounds to the synth
     synth.addSound(new SineSound());    
@@ -132,8 +130,9 @@ void SubtractiveSynthAudioProcessor::addSoundSynth() {
     synth.addSound(new TriangleSound());
 }
 
-void SubtractiveSynthAudioProcessor::addVoiceSynth(SynthesiserVoice* const newVoice) {  // this method add a single voice to the synth. you have to pass the SynthesiserVoice children that you want
-    synth.addVoice(newVoice);                                                           //  addVoiceSynth(new SineVoice()) -> add a sine voice , synth.addVoice(new SawVoice()) -> add a sawVoice and so on for the 4 different voices
+void SubtractiveSynthAudioProcessor::addVoiceSynth(int newWaveNum) {  // this method add a single voice to the synth. you have to pass the SynthesiserVoice children that you want
+
+    synth.addVoice(OscillatorBase::makeProduct(newWaveNum));
 }
 
 void SubtractiveSynthAudioProcessor::releaseResources()
@@ -180,24 +179,15 @@ void SubtractiveSynthAudioProcessor::setResonance(float newResonance) {  //newRe
 void SubtractiveSynthAudioProcessor::setWaveFormNum(float newWaveNum) {  //newWaveNum number goes from 1 to 4
     if(newWaveNum > 0) waveFormNum = newWaveNum;
     synth.clearVoices();   // clear all the voice to add the new voice based on the waveForm num
-
-    if (newWaveNum == 1)  //TODO change this else if, only to test
-    {
-        synth.addVoice(new SineVoice());
-    }
-    else if (newWaveNum == 2) {
-        synth.addVoice(new SawVoice());
-    }
-    else if (newWaveNum == 3) {
-        synth.addVoice(new TriangleVoice());
-    }
-    else if (newWaveNum == 4) {
-        synth.addVoice(new SquareVoice());
-    }
+    addVoiceSynth(newWaveNum);
 }
 
 void SubtractiveSynthAudioProcessor::setOscAmplitude(float newAmplitude) {
     amplitude.setGainLinear(newAmplitude);
+}
+
+void SubtractiveSynthAudioProcessor::setPoleNumber(int order) {
+    
 }
 
 //=================================================================================
@@ -222,7 +212,7 @@ void SubtractiveSynthAudioProcessor::processBlock (AudioBuffer<float>& buffer, M
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
         buffer.clear(i, 0, buffer.getNumSamples());
 
-    synth.renderNextBlock(tempBuffer, midiMessages, 0, numSamples);  //synthesis of the wave
+    synth.renderNextBlock(tempBuffer, MidiBuffer() , 0, numSamples);  //synthesis of the wave
 
     dsp::AudioBlock<float> currentBlock(tempBuffer);        // create an audio block that points to the tempBuffer filled with the wave samples
 
@@ -233,11 +223,13 @@ void SubtractiveSynthAudioProcessor::processBlock (AudioBuffer<float>& buffer, M
     
     for (MidiBuffer::Iterator i(midiMessages); i.getNextEvent(m, time);)       //listening for midi event and change the freq of the oscillator
         if (m.isNoteOn()) {
+            addVoiceSynth(waveFormNum);
             synth.noteOn(waveFormNum, m.getNoteNumber(), 1);  // the first parameter of noteOn is used to select the midiChannel (we have one channel for every sound, 4 in our case)
         }
         else if (m.isNoteOff()) 
         {
-            synth.allNotesOff(waveFormNum, false);  //TODO with multiple keys we cant take off all the notes
+            synth.noteOff(waveFormNum, m.getNoteNumber(), 1, false);
+            synth.removeVoice(synth.getNumVoices());
         }
 }
 
