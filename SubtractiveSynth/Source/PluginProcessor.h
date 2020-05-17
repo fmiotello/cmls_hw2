@@ -68,7 +68,6 @@ public:
     void setResonance(float newResonance);
     void setWaveFormNum(float newWaveNum);
     void setOscAmplitude(float newAmplitude);
-    void setPoleNumber(int order);
 
 private:
 

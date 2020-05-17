@@ -186,15 +186,10 @@ void SubtractiveSynthAudioProcessor::setOscAmplitude(float newAmplitude) {
     amplitude.setGainLinear(newAmplitude);
 }
 
-void SubtractiveSynthAudioProcessor::setPoleNumber(int order) {
-    
-}
-
 //=================================================================================
 
 void SubtractiveSynthAudioProcessor::updateFilter() {
     *lowPassFilter.state = *dsp::IIR::Coefficients<float>::makeLowPass(SAMPLE_RATE, cutOffFreq, resonance);
-    //*lowPassFilter.state = *dsp::FilterDesign<float>::designIIRHighpassHighOrderButterworthMethod(cutOffFreq, SAMPLE_RATE, 4)[0];
 }
 
 void SubtractiveSynthAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiBuffer& midiMessages)
@@ -224,7 +219,7 @@ void SubtractiveSynthAudioProcessor::processBlock (AudioBuffer<float>& buffer, M
     for (MidiBuffer::Iterator i(midiMessages); i.getNextEvent(m, time);)       //listening for midi event and change the freq of the oscillator
         if (m.isNoteOn()) {
             addVoiceSynth(waveFormNum);
-            synth.noteOn(waveFormNum, m.getNoteNumber(), 1);  // the first parameter of noteOn is used to select the midiChannel (we have one channel for every sound, 4 in our case)
+            synth.noteOn(waveFormNum, m.getNoteNumber(), 0.1);  // the first parameter of noteOn is used to select the midiChannel (we have one channel for every sound, 4 in our case)
         }
         else if (m.isNoteOff()) 
         {
