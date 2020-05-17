@@ -40,8 +40,6 @@ private:
     Label cutOffFreqLabel;
     Slider resonance;
     Label resonanceLabel;
-    Slider poleNumber;
-    Label poleNumberLabel;
 
     Label labelMainPart;
     Label labelFilterPart;

@@ -40,7 +40,6 @@ SubtractiveSynthAudioProcessorEditor::SubtractiveSynthAudioProcessorEditor (Subt
 
     cutOffFreqLabel.setText("Cut-off freq :", dontSendNotification);
     resonanceLabel.setText("Resonance :", dontSendNotification);
-    poleNumberLabel.setText("Number of poles :", dontSendNotification);
 
     cutOffFreq.setRange(1000, 10000, 1);    //maybe we will use setNormalisableRange (NormalisableRange< double > newNormalisableRange) to use a logarithmic scale.
     cutOffFreq.setSliderStyle(Slider::Rotary);
@@ -50,26 +49,17 @@ SubtractiveSynthAudioProcessorEditor::SubtractiveSynthAudioProcessorEditor (Subt
     cutOffFreq.setValue(2000);
     cutOffFreq.setTextValueSuffix("Hz");
 
-    resonance.setRange(1, 25, 0.5);
+    resonance.setRange(1, 15, 0.5);
     resonance.setSliderStyle(Slider::Rotary);
     resonance.setTextBoxStyle(Slider::TextBoxBelow, false, 80, 20);
     resonance.addListener(this);
     addAndMakeVisible(resonance);
     resonance.setValue(10);
 
-    poleNumber.setRange(1, 4, 1);
-    poleNumber.setSliderStyle(Slider::Rotary);
-    poleNumber.setTextBoxStyle(Slider::TextBoxBelow, false, 80, 20);
-    poleNumber.addListener(this);
-    addAndMakeVisible(poleNumber);
-    poleNumber.setValue(2);
-
     addAndMakeVisible(cutOffFreq);
     addAndMakeVisible(cutOffFreqLabel);
     addAndMakeVisible(resonance);
     addAndMakeVisible(resonanceLabel);
-    addAndMakeVisible(poleNumber);
-    addAndMakeVisible(poleNumberLabel);
 
 
     Font mainFont = Font(18, Font::bold);
@@ -129,7 +119,6 @@ void SubtractiveSynthAudioProcessorEditor::resized()
     FlexBox filterFlexBox;
     FlexBox secondaryFlex3;
     FlexBox secondaryFlex4;
-    FlexBox secondaryFlex5;
 
 
     filterFlexBox.flexDirection = FlexBox::Direction::row;
@@ -143,15 +132,11 @@ void SubtractiveSynthAudioProcessorEditor::resized()
     secondaryFlex4.flexDirection = FlexBox::Direction::column;
     secondaryFlex4.justifyContent = FlexBox::JustifyContent::spaceAround;
     secondaryFlex4.alignContent = FlexBox::AlignContent::center;
-    secondaryFlex5.flexDirection = FlexBox::Direction::column;
-    secondaryFlex5.justifyContent = FlexBox::JustifyContent::spaceAround;
-    secondaryFlex5.alignContent = FlexBox::AlignContent::center;
 
     secondaryFlex3.items = { FlexItem(100, 15, cutOffFreqLabel), FlexItem(100, 100, cutOffFreq) };
     secondaryFlex4.items = { FlexItem(100, 15, resonanceLabel), FlexItem(100, 100, resonance) };
-    secondaryFlex5.items = { FlexItem(100, 15, poleNumberLabel), FlexItem(100, 100, poleNumber) };
 
-    filterFlexBox.items = { FlexItem(100,150,secondaryFlex3), FlexItem(100,150,secondaryFlex4), FlexItem(100,150,secondaryFlex5)};
+    filterFlexBox.items = { FlexItem(100,150,secondaryFlex3), FlexItem(100,150,secondaryFlex4)};
 
 
     FlexBox mainFlexBox;
@@ -204,8 +189,8 @@ void SubtractiveSynthAudioProcessorEditor::sliderValueChanged(Slider * slider) {
         DBG("dbg : Resonance Changed");
         processor.setResonance(resonance.getValue());
     }
-    else if (slider == &poleNumber) {
-        DBG("dbg : Pole number Changed");
+    else {
+        DBG("ERROR : UNKNONW SLIDER");
         //processor.setPoleNumber(poleNumber.getValue());
     }
 }
