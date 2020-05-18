@@ -226,7 +226,7 @@ void SubtractiveSynthAudioProcessor::processBlock (AudioBuffer<float>& buffer, M
         else if (m.isNoteOff()) 
         {
             synth.noteOff(waveFormNum, m.getNoteNumber(), 1, false);
-            synth.removeVoice(synth.getNumVoices());
+            synth.removeVoice(synth.getNumVoices()-1);
         }
 }
 
