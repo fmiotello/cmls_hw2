@@ -1,12 +1,3 @@
-/*
-  ==============================================================================
-
-    SynthVoice.h
-    Created: 12 May 2020 8:51:52pm
-    Author:  Francesco
-
-  ==============================================================================
-*/
 
 #pragma once
 #include<JuceHeader.h>
@@ -20,6 +11,10 @@
 class OscillatorBase : public SynthesiserVoice  
 {
 public:
+
+    ~OscillatorBase() {
+    }
+
     OscillatorBase()
     {
         amplitude.reset(SAMPLE_RATE, 0.1);
@@ -44,20 +39,11 @@ public:
         amplitude.setTargetValue(0.0);
     }
 
-    void pitchWheelMoved(int newValue) override
-    {
-        // Change the phase increment based on pitch bend amount
-        auto frequencyOffset = ((newValue > 0 ? maxFreq : minFreq) * (newValue / 127.0));
-        phaseIncrement.setTargetValue(((MathConstants<double>::twoPi) * (frequency + frequencyOffset)) / sampleRate);
-    }
+    void pitchWheelMoved(int newValue) override {}
 
     void controllerMoved(int, int) override {}
 
-    void channelPressureChanged(int newChannelPressureValue) override
-    {
-        // Set the amplitude based on pressure value
-        amplitude.setTargetValue(newChannelPressureValue / 127.0);
-    }
+    void channelPressureChanged(int newChannelPressureValue) override {}
 
     void renderNextBlock(AudioBuffer<float>& outputBuffer, int startSample, int numSamples) override
     {
@@ -87,22 +73,19 @@ public:
         return output;
     }
 
-    static OscillatorBase* makeProduct(int waveNum) {
-        OscillatorBase* proto;
+    static OscillatorBase* makeProduct(int waveNum) {  //return an object of the voice class that correspond to waveNum
 
-        if (voiceMap.contains(waveNum)) {
-            proto = voiceMap[waveNum];
+        if (voiceMap.count(waveNum) >0) {
+            return voiceMap[waveNum]->clone();
         }
-        
-        return proto->clone();
     }
 
-    static void addPrototype(int waveNum, OscillatorBase* p) {
-        voiceMap.set(waveNum, p);
+    static void addPrototype(int waveNum, std::unique_ptr<OscillatorBase> p) { //use in the inizialization of the synth to populate the voiceMap
+        voiceMap.insert({ waveNum, std::move(p) });
     }
 
-    static int getNumProto() {
-        return (int)voiceMap.size();
+    static void freeResource() { //use the free the resources 
+        voiceMap.clear();
     }
 
 
@@ -116,7 +99,7 @@ public:
 
 private:
     SmoothedValue<double> amplitude, phaseIncrement;
-    static HashMap<int, OscillatorBase*> voiceMap;
+    static std::map<int, std::unique_ptr<OscillatorBase> > voiceMap;
 
     double frequency = 0.0;
     double phasePos = 0.0;

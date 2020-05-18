@@ -110,10 +110,11 @@ void SubtractiveSynthAudioProcessor::prepareToPlay (double sampleRate, int sampl
     lowPassFilter.prepare(spec);
     lowPassFilter.reset();
 
-    OscillatorBase::addPrototype(1, new SineVoice());
-    OscillatorBase::addPrototype(2, new SawVoice());
-    OscillatorBase::addPrototype(3, new TriangleVoice());
-    OscillatorBase::addPrototype(4, new SquareVoice());
+    //add the 4 prototype to the class OscillatorBase, this is done to dinamically generate new voice during the execution
+    OscillatorBase::addPrototype(1, std::unique_ptr<OscillatorBase>(new SineVoice()));
+    OscillatorBase::addPrototype(2, std::unique_ptr<OscillatorBase>(new SawVoice()));
+    OscillatorBase::addPrototype(3, std::unique_ptr<OscillatorBase>(new TriangleVoice()));
+    OscillatorBase::addPrototype(4, std::unique_ptr<OscillatorBase>(new SquareVoice()));
 
     synth.setCurrentPlaybackSampleRate(SAMPLE_RATE);  // set the synth
     addSoundSynth();
@@ -130,7 +131,7 @@ void SubtractiveSynthAudioProcessor::addSoundSynth() {
     synth.addSound(new TriangleSound());
 }
 
-void SubtractiveSynthAudioProcessor::addVoiceSynth(int newWaveNum) {  // this method add a single voice to the synth. you have to pass the SynthesiserVoice children that you want
+void SubtractiveSynthAudioProcessor::addVoiceSynth(int newWaveNum) {  // this method add a single voice to the synth. you have to pass the number that you want
 
     synth.addVoice(OscillatorBase::makeProduct(newWaveNum));
 }
@@ -139,6 +140,7 @@ void SubtractiveSynthAudioProcessor::releaseResources()
 {
     // When playback stops, you can use this as an opportunity to free up any
     // spare memory, etc.
+    OscillatorBase::freeResource();
 }
 
 #ifndef JucePlugin_PreferredChannelConfigurations
@@ -188,7 +190,7 @@ void SubtractiveSynthAudioProcessor::setOscAmplitude(float newAmplitude) {
 
 //=================================================================================
 
-void SubtractiveSynthAudioProcessor::updateFilter() {
+void SubtractiveSynthAudioProcessor::updateFilter() { //update the filter coefficent basend on cutoff and resonance
     *lowPassFilter.state = *dsp::IIR::Coefficients<float>::makeLowPass(SAMPLE_RATE, cutOffFreq, resonance);
 }
 
