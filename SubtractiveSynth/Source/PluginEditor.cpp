@@ -145,7 +145,7 @@ void SubtractiveSynthAudioProcessorEditor::resized()
     mainFlexBox.justifyContent = FlexBox::JustifyContent::spaceAround;
     mainFlexBox.alignContent = FlexBox::AlignContent::center;
 
-    mainFlexBox.items = { FlexItem(100,15,labelMainPart), FlexItem(400,150,generalFlexBox),FlexItem(400,40,Label(" ")), FlexItem(100,15,labelFilterPart), FlexItem(400,150,filterFlexBox) };
+    mainFlexBox.items = { FlexItem(100,15,labelMainPart), FlexItem(400,150,generalFlexBox), FlexItem(100,15,labelFilterPart), FlexItem(400,150,filterFlexBox) };
 
 
     mainFlexBox.performLayout(bounds);
