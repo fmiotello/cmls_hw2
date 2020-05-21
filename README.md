@@ -4,7 +4,9 @@ This is a simple subtractive synthesizer plugin made with [JUCE](https://juce.co
 
 ## Installation
 
-Use the Projucer app to build the plugin. An already built VST3 version is already available in the `Build` directory.
+The Projucer app, made available by JUCE, will help in the building process, as it handles many things automatically. The output file needs to be placed in the correct path, in order to be visible by your preferred DAW.
+
+An already built VST3 version is available in `/Build` directory.
 
 Have fun!
 
